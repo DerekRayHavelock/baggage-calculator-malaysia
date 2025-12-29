@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malaysia Domestic Flight Baggage Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1b7895 0%, #2596be 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #1b7895;
+            box-shadow: 0 0 0 3px rgba(27, 120, 149, 0.1);
+        }
+
+        .baggage-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1b7895 0%, #2596be 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 24px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(27, 120, 149, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 32px;
+            padding: 24px;
+            border-radius: 12px;
+            background: #f7fafc;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-item.success {
+            background: #c6f6d5;
+            border-left: 4px solid #38a169;
+        }
+
+        .result-item.warning {
+            background: #fed7d7;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .result-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .result-detail {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .info-box {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 14px;
+            color: #075985;
+            line-height: 1.6;
+        }
+
+        .beta-badge {
+            display: inline-block;
+            background: #fbbf24;
+            color: #78350f;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .baggage-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇲🇾 Malaysia Domestic Flight Baggage Calculator <span class="beta-badge">BETA</span></h1>
+        <p class="subtitle">Check your baggage allowance before you pack • Save money on excess fees</p>
+
+        <div class="form-group">
+            <label for="airline">Select Airline</label>
+            <select id="airline">
+                <option value="">Choose your airline...</option>
+                <option value="airasia">AirAsia</option>
+                <option value="mas">Malaysia Airlines</option>
+                <option value="batik">Batik Air Malaysia</option>
+                <option value="firefly">Firefly</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="aircraftGroup" style="display: none;">
+            <label for="aircraft">Select Aircraft Type (Firefly only)</label>
+            <select id="aircraft">
+                <option value="">Choose aircraft type...</option>
+                <option value="atr">ATR 72-500 Turboprop (20kg FREE)</option>
+                <option value="boeing">Boeing 737-800 Jet (0kg - must pre-purchase)</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="fareTypeGroup" style="display: none;">
+            <label for="fareType">Select Fare Type</label>
+            <select id="fareType">
+                <option value="">Choose your fare type...</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Baggage Weights (in kilograms)</label>
+            <div class="baggage-inputs">
+                <div>
+                    <label for="cabin" style="font-weight: 400; font-size: 13px; color: #718096;">Cabin Baggage (kg)</label>
+                    <input type="number" id="cabin" step="0.1" min="0" max="50" placeholder="e.g., 6.5">
+                </div>
+                <div>
+                    <label for="checked" style="font-weight: 400; font-size: 13px; color: #718096;">Checked Baggage (kg)</label>
+                    <input type="number" id="checked" step="0.1" min="0" max="100" placeholder="e.g., 18.0">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="calculate()">Calculate Baggage Allowance</button>
+
+        <div class="results" id="results"></div>
+
+        <div class="info-box">
+            <strong>💡 Pro Tips:</strong><br>
+            • Pre-purchase baggage online to save 30-70% vs airport rates<br>
+            • ALL airlines use 7kg cabin limit (strictly enforced)<br>
+            • Firefly ATR flights include generous 20kg FREE<br>
+            • Malaysia Airlines Economy Value = 0kg (changed April 2025)<br>
+            • Maximum 32kg per individual checked bag
+        </div>
+    </div>
+
+    <script>
+        const airlineData = {
+            airasia: {
+                name: "AirAsia",
+                cabinLimit: 7,
+                fares: {
+                    standard: { name: "Standard Fare (No baggage)", checked: 0, cabin: 7 },
+                    kg15: { name: "15kg Pre-purchased", checked: 15, cabin: 7 },
+                    kg20: { name: "20kg Pre-purchased", checked: 20, cabin: 7 },
+                    kg25: { name: "25kg Pre-purchased", checked: 25, cabin: 7 },
+                    kg30: { name: "30kg Pre-purchased", checked: 30, cabin: 7 },
+                    kg40: { name: "40kg Pre-purchased", checked: 40, cabin: 7 }
+                },
+                fees: {
+                    initial15: 105,
+                    initial20: 146,
+                    after15: 147,
+                    after20: 204,
+                    airport20: 150,
+                    perKg: 60,
+                    gate: 48
+                },
+                currency: "MYR",
+                note: "Largest carrier, strict enforcement"
+            },
+            mas: {
+                name: "Malaysia Airlines",
+                fares: {
+                    value: { name: "Economy Value (0kg - NEW Apr 2025)", checked: 0, cabin: 7, class: "economy" },
+                    basic: { name: "Economy Basic (20kg)", checked: 20, cabin: 7, class: "economy" },
+                    flex: { name: "Economy Flex (20kg)", checked: 20, cabin: 7, class: "economy" },
+                    business: { name: "Business Class (40kg)", checked: 40, cabin: 14, class: "business" }
+                },
+                excessFee: 11,
+                currency: "MYR",
+                note: "Full-service carrier, Enrich benefits available"
+            },
+            batik: {
+                name: "Batik Air Malaysia",
+                fares: {
+                    supersaver: { name: "Super Saver (0kg)", checked: 0, cabin: 7, class: "economy" },
+                    value: { name: "Economy Value (10kg)", checked: 10, cabin: 7, class: "economy" },
+                    flexi: { name: "Economy Flexi (20kg)", checked: 20, cabin: 7, class: "economy" },
+                    business: { name: "Business Class (30-40kg)", checked: 30, cabin: 10, class: "business" }
+                },
+                excessFee: 50,
+                currency: "MYR",
+                note: "Hybrid carrier, strict KLIA weighing"
+            },
+            firefly: {
+                name: "Firefly",
+                aircraft: {
+                    atr: {
+                        fares: {
+                            basic: { name: "FlyBasic (20kg FREE)", checked: 20, cabin: 7 },
+                            premier: { name: "FlyPremier (30kg FREE)", checked: 30, cabin: 7 }
+                        }
+                    },
+                    boeing: {
+                        fares: {
+                            basic: { name: "FlyBasic (0kg - must pre-purchase)", checked: 0, cabin: 7 },
+                            premier: { name: "FlyPremier (0kg - must pre-purchase)", checked: 0, cabin: 7 }
+                        }
+                    }
+                },
+                excessOnline: 12,
+                excessCounter: 35,
+                gateDomesticATR: 47.17,
+                gateDomesticBoeing: 188.68,
+                currency: "MYR",
+                note: "Regional carrier, aircraft type matters"
+            }
+        };
+
+        document.getElementById('airline').addEventListener('change', function() {
+            const airline = this.value;
+            const aircraftGroup = document.getElementById('aircraftGroup');
+            const fareTypeGroup = document.getElementById('fareTypeGroup');
+            const fareTypeSelect = document.getElementById('fareType');
+            const aircraftSelect = document.getElementById('aircraft');
+            const results = document.getElementById('results');
+            
+            // Reset
+            aircraftGroup.style.display = 'none';
+            fareTypeGroup.style.display = 'none';
+            fareTypeSelect.innerHTML = '<option value="">Choose your fare type...</option>';
+            aircraftSelect.value = '';
+            results.classList.remove('show');
+            
+            if (airline === 'firefly') {
+                aircraftGroup.style.display = 'block';
+            } else if (airline && airlineData[airline]) {
+                fareTypeGroup.style.display = 'block';
+                const fares = airlineData[airline].fares;
+                for (const [key, fare] of Object.entries(fares)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = fare.name;
+                    fareTypeSelect.appendChild(option);
+                }
+            }
+        });
+
+        document.getElementById('aircraft').addEventListener('change', function() {
+            const aircraft = this.value;
+            const fareTypeGroup = document.getElementById('fareTypeGroup');
+            const fareTypeSelect = document.getElementById('fareType');
+            const results = document.getElementById('results');
+            
+            fareTypeGroup.style.display = aircraft ? 'block' : 'none';
+            fareTypeSelect.innerHTML = '<option value="">Choose your fare type...</option>';
+            results.classList.remove('show');
+            
+            if (aircraft) {
+                const fares = airlineData.firefly.aircraft[aircraft].fares;
+                for (const [key, fare] of Object.entries(fares)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = fare.name;
+                    fareTypeSelect.appendChild(option);
+                }
+            }
+        });
+
+        function calculate() {
+            const airlineCode = document.getElementById('airline').value;
+            const aircraftType = document.getElementById('aircraft').value;
+            const fareCode = document.getElementById('fareType').value;
+            const cabinWeight = parseFloat(document.getElementById('cabin').value);
+            const checkedWeight = parseFloat(document.getElementById('checked').value);
+            
+            if (!airlineCode) {
+                alert('Please select an airline');
+                return;
+            }
+            
+            if (airlineCode === 'firefly' && !aircraftType) {
+                alert('Please select aircraft type for Firefly');
+                return;
+            }
+            
+            if (!fareCode) {
+                alert('Please select a fare type');
+                return;
+            }
+            
+            if (isNaN(cabinWeight) || isNaN(checkedWeight)) {
+                alert('Please enter valid numbers for baggage weights');
+                return;
+            }
+            
+            const airline = airlineData[airlineCode];
+            let fare;
+            
+            if (airlineCode === 'firefly') {
+                fare = airline.aircraft[aircraftType].fares[fareCode];
+            } else {
+                fare = airline.fares[fareCode];
+            }
+            
+            const cabinAllowed = fare.cabin;
+            const checkedAllowed = fare.checked;
+            
+            const cabinOver = Math.max(0, cabinWeight - cabinAllowed);
+            const checkedOver = Math.max(0, checkedWeight - checkedAllowed);
+            
+            let resultsHTML = '';
+            
+            // Cabin baggage result
+            if (cabinOver === 0) {
+                resultsHTML += `
+                    <div class="result-item success">
+                        <div class="result-title">✅ Cabin Baggage: Within Limits</div>
+                        <div class="result-detail">
+                            Your cabin baggage (<span class="highlight">${cabinWeight} kg</span>) is within the 
+                            <span class="highlight">${cabinAllowed} kg</span> limit. You're good to go!
+                        </div>
+                    </div>
+                `;
+            } else {
+                let cabinFeeInfo = '';
+                if (airlineCode === 'airasia') {
+                    cabinFeeInfo = `<br><br><strong>Gate Fee:</strong> ${airline.currency} ${airline.fees.gate} if found overweight at boarding gate.`;
+                } else if (airlineCode === 'firefly') {
+                    const gateFee = aircraftType === 'atr' ? airline.gateDomesticATR : airline.gateDomesticBoeing;
+                    cabinFeeInfo = `<br><br><strong>Gate Fee:</strong> ${airline.currency} ${gateFee} per piece if checked at gate.`;
+                } else if (airlineCode === 'mas' || airlineCode === 'batik') {
+                    cabinFeeInfo = `<br><br><strong>⚠️ Enforcement:</strong> You'll need to check this bag or remove items. Most airlines strictly enforce the 7kg limit.`;
+                }
+                
+                resultsHTML += `
+                    <div class="result-item warning">
+                        <div class="result-title">⚠️ Cabin Baggage: Over Limit</div>
+                        <div class="result-detail">
+                            Your cabin baggage (<span class="highlight">${cabinWeight} kg</span>) exceeds the 
+                            <span class="highlight">${cabinAllowed} kg</span> limit by <span class="highlight">${cabinOver.toFixed(1)} kg</span>.
+                            ${cabinFeeInfo}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Checked baggage result
+            if (checkedAllowed === 0) {
+                if (checkedWeight > 0) {
+                    let feeInfo = '';
+                    if (airlineCode === 'airasia') {
+                        const airport20Fee = airline.fees.airport20;
+                        const initial20Fee = airline.fees.initial20;
+                        const savings = airport20Fee - initial20Fee;
+                        feeInfo = `
+                            <strong>Options:</strong><br>
+                            • Pre-purchase 20kg (initial booking): <span class="highlight">${airline.currency} ${initial20Fee}</span> - CHEAPEST<br>
+                            • Pre-purchase 20kg (after booking): <span class="highlight">${airline.currency} ${airline.fees.after20}</span><br>
+                            • Airport counter (first 20kg): <span class="highlight">${airline.currency} ${airport20Fee}</span><br>
+                            • Per kg excess: ${airline.currency} ${airline.fees.perKg}/kg<br>
+                            💰 <strong>Save ${airline.currency} ${savings} by pre-purchasing at initial booking!</strong>
+                        `;
+                    } else if (airlineCode === 'mas') {
+                        feeInfo = `
+                            <strong>Options:</strong><br>
+                            • Pre-purchase online during booking: CHEAPEST option (contact airline for rates)<br>
+                            • At airport: <span class="highlight">${airline.currency} ${airline.excessFee}/kg</span><br>
+                            💡 <strong>Tip:</strong> Consider upgrading to Economy Basic (20kg included) if it's cheaper than buying baggage separately.
+                        `;
+                    } else if (airlineCode === 'batik') {
+                        feeInfo = `
+                            <strong>Options:</strong><br>
+                            • Pre-purchase online: DISCOUNTED rate (contact airline for exact pricing)<br>
+                            • At airport: approximately <span class="highlight">${airline.currency} ${airline.excessFee}/kg</span><br>
+                            💡 <strong>Tip:</strong> Economy Value includes 10kg for mid-tier pricing.
+                        `;
+                    } else if (airlineCode === 'firefly') {
+                        const onlineCost = Math.ceil(checkedWeight / 5) * 5 * airline.excessOnline;
+                        const counterCost = checkedWeight * airline.excessCounter;
+                        feeInfo = `
+                            <strong>You need approximately ${Math.ceil(checkedWeight)} kg:</strong><br>
+                            • Pre-purchase online (5kg increments): approximately <span class="highlight">${airline.currency} ${onlineCost}</span> (${airline.currency} ${airline.excessOnline}/kg)<br>
+                            • At counter: approximately <span class="highlight">${airline.currency} ${counterCost.toFixed(0)}</span> (${airline.currency} ${airline.excessCounter}/kg)<br>
+                            💰 <strong>Save ${airline.currency} ${(counterCost - onlineCost).toFixed(0)} by pre-purchasing online!</strong>
+                        `;
+                    }
+                    
+                    resultsHTML += `
+                        <div class="result-item warning">
+                            <div class="result-title">⚠️ Checked Baggage: No Allowance Included</div>
+                            <div class="result-detail">
+                                Your fare (<span class="highlight">${fare.name}</span>) includes <span class="highlight">NO free checked baggage</span>.<br>
+                                You have <span class="highlight">${checkedWeight} kg</span> to check in.<br><br>
+                                ${feeInfo}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsHTML += `
+                        <div class="result-item success">
+                            <div class="result-title">✅ Checked Baggage: No Bag to Check</div>
+                            <div class="result-detail">
+                                Your fare (<span class="highlight">${fare.name}</span>) includes no free checked baggage, but you're not checking any bags. Perfect!
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                if (checkedOver === 0) {
+                    resultsHTML += `
+                        <div class="result-item success">
+                            <div class="result-title">✅ Checked Baggage: Within Limits</div>
+                            <div class="result-detail">
+                                Your checked baggage (<span class="highlight">${checkedWeight} kg</span>) is within your 
+                                <span class="highlight">${checkedAllowed} kg</span> allowance. No excess fees!
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let excessInfo = '';
+                    if (airlineCode === 'airasia') {
+                        const initial20 = airline.fees.initial20;
+                        const after20 = airline.fees.after20;
+                        excessInfo = `
+                            <strong>Excess baggage options:</strong><br>
+                            • Pre-purchase additional weight (initial booking): from <span class="highlight">${airline.currency} ${initial20}</span> for 20kg<br>
+                            • Pre-purchase after booking: from <span class="highlight">${airline.currency} ${after20}</span> for 20kg<br>
+                            • At airport: <span class="highlight">${airline.currency} ${airline.fees.perKg}/kg</span><br><br>
+                            💡 <strong>Pre-purchasing at initial booking is 30-50% cheaper!</strong>
+                        `;
+                    } else if (airlineCode === 'mas') {
+                        const excessCost = Math.ceil(checkedOver) * airline.excessFee;
+                        excessInfo = `
+                            <strong>You're ${checkedOver.toFixed(1)} kg over:</strong><br>
+                            • At airport: <span class="highlight">${airline.currency} ${excessCost}</span> (${airline.currency} ${airline.excessFee}/kg × ${Math.ceil(checkedOver)} kg)<br>
+                            • Pre-purchase online: Cheaper rate available (contact airline)<br><br>
+                            💡 <strong>MH Enrich members get extra baggage allowance!</strong>
+                        `;
+                    } else if (airlineCode === 'batik') {
+                        const excessCost = Math.ceil(checkedOver) * airline.excessFee;
+                        excessInfo = `
+                            <strong>You're ${checkedOver.toFixed(1)} kg over:</strong><br>
+                            • At airport: approximately <span class="highlight">${airline.currency} ${excessCost}</span> (${airline.currency} ${airline.excessFee}/kg)<br>
+                            • Pre-purchase online: Discounted rate available<br><br>
+                            💡 <strong>Pre-purchasing saves money vs airport rates!</strong>
+                        `;
+                    } else if (airlineCode === 'firefly') {
+                        const kgsNeeded = Math.ceil(checkedOver);
+                        const onlineCost = Math.ceil(kgsNeeded / 5) * 5 * airline.excessOnline;
+                        const counterCost = kgsNeeded * airline.excessCounter;
+                        excessInfo = `
+                            <strong>You need ${kgsNeeded} kg more:</strong><br>
+                            • Pre-purchase online (5kg increments): approximately <span class="highlight">${airline.currency} ${onlineCost}</span><br>
+                            • At counter: approximately <span class="highlight">${airline.currency} ${counterCost}</span><br><br>
+                            💰 <strong>Save ${airline.currency} ${counterCost - onlineCost} by pre-purchasing online!</strong>
+                        `;
+                    }
+                    
+                    resultsHTML += `
+                        <div class="result-item warning">
+                            <div class="result-title">⚠️ Checked Baggage: Over Limit</div>
+                            <div class="result-detail">
+                                Your checked baggage (<span class="highlight">${checkedWeight} kg</span>) exceeds your 
+                                <span class="highlight">${checkedAllowed} kg</span> allowance by <span class="highlight">${checkedOver.toFixed(1)} kg</span>.<br><br>
+                                ${excessInfo}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Weight limit warning
+            if (checkedWeight > 32) {
+                resultsHTML += `
+                    <div class="result-item warning">
+                        <div class="result-title">⚠️ Weight Limit Exceeded</div>
+                        <div class="result-detail">
+                            Your bag weighs <span class="highlight">${checkedWeight} kg</span>, but the maximum weight per individual bag is 
+                            <span class="highlight">32 kg</span> for safety reasons (all Malaysian airlines).<br>
+                            You MUST split this into multiple bags.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Airline-specific notes
+            if (airlineCode === 'mas' && fareCode === 'value') {
+                resultsHTML += `
+                    <div class="result-item" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                        <div class="result-title">⚠️ Economy Value - Changed April 2025</div>
+                        <div class="result-detail">
+                            Economy Value (previously Lite) now includes 0kg checked baggage. This changed on April 10, 2025. Previously included 20kg.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (airlineCode === 'firefly' && aircraftType === 'atr') {
+                resultsHTML += `
+                    <div class="result-item" style="background: #d1fae5; border-left: 4px solid #059669;">
+                        <div class="result-title">✨ ATR Flight - Generous FREE Baggage!</div>
+                        <div class="result-detail">
+                            Firefly's ATR 72-500 flights include FREE checked baggage (20kg for FlyBasic, 30kg for FlyPremier). This is much more generous than most low-cost carriers!
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (airlineCode === 'mas' && fare.class === 'business') {
+                resultsHTML += `
+                    <div class="result-item" style="background: #e0e7ff; border-left: 4px solid #6366f1;">
+                        <div class="result-title">✈️ Business Class Benefits</div>
+                        <div class="result-detail">
+                            Business Class includes 14kg cabin (2 bags) and 40kg checked. Plus priority boarding, check-in, and lounge access.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('results').innerHTML = resultsHTML;
+            document.getElementById('results').classList.add('show');
+        }
+    </script>
+</body>
+</html>
